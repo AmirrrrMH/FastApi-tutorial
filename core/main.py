@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, status, HTTPException
+from fastapi import FastAPI, Query, status, HTTPException, Path
 from typing import Annotated
 
 names_list = [
@@ -21,14 +21,51 @@ async def retrive_name_detail(name_id: int):
 
 
 @app.get("/names")
-async def show_name_list(q: Annotated[str | None, Query(max_length=20)] = None):
-    if q:
-        return [item for item in names_list if item["name"] == q]
-    return names_list
+async def show_name_list(
+    q: Annotated[
+        str | None,
+        Query(
+            description="it will be searched with the title you provided",
+            alias="Search",
+            title="Search Name",
+            examples="amir",
+            max_length=20,
+            min_length=3,
+        ),
+    ] = None,
+):
+    if not q:
+        return names_list
+    for item in names_list:
+        if item["name"] == q:
+            return item
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="obj not found")
 
 
 @app.put("/names/{name_id}", status_code=status.HTTP_200_OK)
-async def update_name_detail(name_id: int, name: str):
+async def update_name_detail(
+    name_id: Annotated[
+        int,
+        Path(
+            alias="Name ID",
+            title="Name ID",
+            ge=1,
+            description="Enter id you want replace name",
+            example=1,
+        ),
+    ],
+    name: Annotated[
+        str,
+        Query(
+            alias="Name",
+            title="Name",
+            description="Enter new name",
+            min_length=3,
+            max_length=20,
+            example="amir",
+        ),
+    ],
+):
     for item in names_list:
         if item["id"] == name_id:
             item["name"] = name
@@ -37,7 +74,29 @@ async def update_name_detail(name_id: int, name: str):
 
 
 @app.post("/names/{name_id}", status_code=status.HTTP_201_CREATED)
-async def create_name(name_id: int, name: str):
+async def create_name(
+    name_id: Annotated[
+        int,
+        Path(
+            alias="Name ID",
+            title="Name ID",
+            ge=1,
+            description="Enter id you want replace name",
+            example=1,
+        ),
+    ],
+    name: Annotated[
+        str,
+        Query(
+            alias="Name",
+            title="Name",
+            description="Enter new name",
+            min_length=3,
+            max_length=20,
+            example="amir",
+        ),
+    ],
+):
     if any(item["id"] == name_id for item in names_list):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="ID already exists"
