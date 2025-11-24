@@ -1,12 +1,14 @@
 from fastapi import FastAPI, Query, status, HTTPException, Path
 from typing import Annotated
+from schemas import PersonCreateSchema, PersonResponsSchema
+from typing import List
 
 names_list = [
-    {"id": 1, "name": "amir"},
-    {"id": 2, "name": "shaqayeq"},
-    {"id": 3, "name": "ali"},
-    {"id": 4, "name": "danial"},
-    {"id": 5, "name": "aref"},
+    {"id": 1, "name": "amir", "age": 20},
+    {"id": 2, "name": "shaqayeq", "age": 17},
+    {"id": 3, "name": "ali", "age": 12},
+    {"id": 4, "name": "danial", "age": 16},
+    {"id": 5, "name": "aref", "age": 14},
 ]
 
 app = FastAPI()
@@ -17,7 +19,8 @@ async def retrive_name_detail(name_id: int):
     for name in names_list:
         if name["id"] == name_id:
             return name
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="obj not found")
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, detail="obj not found")
 
 
 @app.get("/names")
@@ -39,7 +42,8 @@ async def show_name_list(
     for item in names_list:
         if item["name"] == q:
             return item
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="obj not found")
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, detail="obj not found")
 
 
 @app.put("/names/{name_id}", status_code=status.HTTP_200_OK)
@@ -70,7 +74,8 @@ async def update_name_detail(
         if item["id"] == name_id:
             item["name"] = name
             return item
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="obj not found")
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, detail="obj not found")
 
 
 @app.post("/names/{name_id}", status_code=status.HTTP_201_CREATED)
@@ -113,4 +118,12 @@ async def delete_name_detail(name_id: int):
         if item["id"] == name_id:
             names_list.remove(item)
             return
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="obj not found")
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, detail="obj not found")
+
+
+@app.post("/names", status_code=status.HTTP_201_CREATED, response_model=List[PersonResponsSchema])
+async def crate_res_name(person: PersonCreateSchema):
+    name_obj = {'id': person.id, "name": person.name, "age": person.age}
+    names_list.append(name_obj)
+    return names_list
