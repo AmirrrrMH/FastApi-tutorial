@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Query, status, HTTPException, Path
 from typing import Annotated
-from schemas import PersonCreateSchema, PersonResponsSchema
+from schemas import PersonCreateSchema, PersonResponsSchema, PersonUpdateSchema
 from typing import List
 
 names_list = [
@@ -14,7 +14,7 @@ names_list = [
 app = FastAPI()
 
 
-@app.get("/names/{name_id}", status_code=status.HTTP_200_OK)
+@app.get("/names/{name_id}", status_code=status.HTTP_200_OK, response_model=PersonResponsSchema)
 async def retrive_name_detail(name_id: int):
     for name in names_list:
         if name["id"] == name_id:
@@ -23,7 +23,7 @@ async def retrive_name_detail(name_id: int):
         status_code=status.HTTP_404_NOT_FOUND, detail="obj not found")
 
 
-@app.get("/names")
+@app.get("/names", status_code=status.HTTP_200_OK, response_model=List[PersonResponsSchema])
 async def show_name_list(
     q: Annotated[
         str | None,
@@ -46,33 +46,21 @@ async def show_name_list(
         status_code=status.HTTP_404_NOT_FOUND, detail="obj not found")
 
 
-@app.put("/names/{name_id}", status_code=status.HTTP_200_OK)
+@app.put("/names/{name_id}", status_code=status.HTTP_200_OK, response_model=PersonResponsSchema)
 async def update_name_detail(
     name_id: Annotated[
         int,
         Path(
-            alias="Name ID",
             title="Name ID",
             ge=1,
             description="Enter id you want replace name",
             example=1,
         ),
-    ],
-    name: Annotated[
-        str,
-        Query(
-            alias="Name",
-            title="Name",
-            description="Enter new name",
-            min_length=3,
-            max_length=20,
-            example="amir",
-        ),
-    ],
+    ], person: PersonUpdateSchema,
 ):
     for item in names_list:
         if item["id"] == name_id:
-            item["name"] = name
+            item["name"] = person.name
             return item
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND, detail="obj not found")
@@ -83,7 +71,6 @@ async def create_name(
     name_id: Annotated[
         int,
         Path(
-            alias="Name ID",
             title="Name ID",
             ge=1,
             description="Enter id you want replace name",
