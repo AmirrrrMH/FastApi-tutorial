@@ -15,7 +15,7 @@ app = FastAPI()
 
 
 @app.get("/names/{name_id}", status_code=status.HTTP_200_OK, response_model=PersonResponsSchema)
-async def retrive_name_detail(name_id: int):
+async def retrive_name_detail(name_id: Annotated[int, Path(title="ID", ge=1, description="id must be posetive")]):
     for name in names_list:
         if name["id"] == name_id:
             return name
